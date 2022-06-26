@@ -1,0 +1,86 @@
+---
+title: "Exploring the burning time of the Böögg"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+boegg_data <- read_csv("boegg_burning_time.csv")
+```
+
+This is the data we start with:
+
+```{r}
+boegg_data
+str(boegg_data)
+summarise(boegg_data)
+```
+```{r}
+valid_data <- boegg_data %>% filter(!is.na(SunnyHours))
+valid_data
+```
+
+```{r}
+library(ggplot2)
+boegg_data <- mutate(valid_data,TimeToBurn= lubridate::duration(TimeToBurn))
+boegg_data <- mutate(boegg_data, relate = lubridate::duration(SunnyHours)/TimeToBurn)
+boegg_data
+```
+```{r}
+# set the shape and size and color of the points. Meanwhile, set the year as factor element instead of default continuous element
+
+ggplot(boegg_data,aes(x=TimeToBurn,y=SunnyHours, color = relate)) +geom_point(aes(color=as.factor(Year)),shape=1,size=4)
+```
+
+
+```{r}
+# use text layer and map Year to label
+ggplot(boegg_data,aes(x=TimeToBurn,y=SunnyHours)) +
+  geom_text(aes(label=Year))+
+  geom_smooth()
+```
+
+```{r}
+
+# set differet point layer, change transparency and shape
+ggplot(boegg_data,aes(x=TimeToBurn,y=SunnyHours, color = relate)) +
+  geom_point(alpha = 1, shape=16)
+  
+
+```
+```{r}
+# use segment to set horizontal bars to better show the graph and give a text label of the Year
+
+ggplot(boegg_data,aes(x=TimeToBurn,y=SunnyHours, color = relate))+
+  geom_point(size=4)+
+  geom_segment(aes(xend=30,yend=SunnyHours), size =2)+
+  geom_text(aes(label=Year), color="white",size =1.5)
+  theme(legend.position="right")
+  
+```
+
+```{r}
+# Add title and move x-axal to the top position
+
+#library(RColorBrewer)
+# Set the color scale
+boegg_data
+
+palette <- brewer.pal(5, "RdYlBu")[-(2:4)]
+
+ggplot(boegg_data,aes(x=TimeToBurn,y=SunnyHours, color = relate))+
+  geom_point(size=4) +
+  geom_segment(aes(xend=0,yend=SunnyHours), size =2)+
+  geom_text(aes(label=round(Year,1)), color="white",size =1.5)+
+  scale_x_continuous("", position = "top") +
+  scale_color_gradientn(colors = palette) +
+  labs(title = "Sunny Hours and Time To Burn",title.position="mid") +
+  theme(legend.position="right") 
+```
+
+We need to convert the `TimeToBurn` column to somethign numerical (hint: check `lubridate::duration()`) and then do some fun plots. 
+
